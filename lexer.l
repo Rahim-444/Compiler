@@ -5,6 +5,21 @@
 #include "parser.tab.h"
 
 
+typedef struct {
+    char name[15];  
+    int code;       
+    union {
+        int int_val;
+        float float_val;
+        char* str_val;
+    } value;
+    int type;       
+    int size;       
+    int line;      
+    int column;     
+} SymbolEntry;
+
+
 int line = 1;
 int column = 1;
 
@@ -18,13 +33,23 @@ void count_position() {
         }
     }
 }
+
+// Function to validate integer range
+int validate_int(int value) {
+    if (value < -32768 || value > 32767) {
+        printf("Lexical Error: Integer %d out of range (-32768 to 32767) at line %d, column %d\n", 
+               value, line, column);
+        return 0;
+    }
+    return 1;
+}
 %}
 
 %option noyywrap
 
 DIGIT [0-9]
 LETTER [a-zA-Z]
-WHITESPACE [ \t]
+WHITESPACE [ \t\n]
 IDENTIFIER {LETTER}({LETTER}|{DIGIT}|_)*
 INTEGER {DIGIT}+
 SIGNED_INT [\(][\+\-]{INTEGER}[\)]
@@ -86,21 +111,65 @@ MULTI_COMMENT "{--"(.|\n)*"--}"
 ")"             { count_position(); return RPAREN; }
 "="             { count_position(); return EQUAL; }
 
-{INTEGER}       { count_position(); return INTEGER; }
-{SIGNED_INT}    { count_position(); return INTEGER; }
-{FLOAT}         { count_position(); return FLOAT_VAL; }
-{SIGNED_FLOAT}  { count_position(); return FLOAT_VAL; }
+{INTEGER}       { 
+                  count_position(); 
+                  int value = atoi(yytext);
+                  if (validate_int(value)) {
+                      yylval.int_val = value;
+                      return INTEGER;
+                  }
+                }
+
+{SIGNED_INT}    { 
+                  count_position(); 
+                  char sign = yytext[1];
+                  char* numStr = strdup(yytext + 2);
+                  numStr[strlen(numStr) - 1] = '\0';
+                  int value = atoi(numStr);
+                  if (sign == '-') value = -value;
+                  
+                  free(numStr);
+                  
+                  if (validate_int(value)) {
+                      yylval.int_val = value;
+                      return INTEGER;
+                  }
+                }
+
+{FLOAT}         { 
+                  count_position(); 
+                  yylval.float_val = atof(yytext);
+                  return FLOAT_VAL;
+                }
+
+{SIGNED_FLOAT}  { 
+                  count_position(); 
+                  char sign = yytext[1]; 
+                  char* numStr = strdup(yytext + 2);
+                  numStr[strlen(numStr) - 1] = '\0';
+                  
+                  float value = atof(numStr);
+                  if (sign == '-') value = -value;
+                  
+                  free(numStr);
+                  
+                  yylval.float_val = value;
+                  return FLOAT_VAL;
+                }
+
 {STRING}        { count_position(); return STRING; }
 
 {IDENTIFIER}    {
                   count_position();
                   
                   if (strlen(yytext) > 14) {
-                    printf("Lexical Error: Identifier '%s' exceeds maximum length at line %d\n", yytext, line);
+                    printf("Lexical Error: Identifier '%s' exceeds maximum length at line %d, column %d\n", 
+                           yytext, line, (int)(column - strlen(yytext)));
                   } 
                   else if (yytext[strlen(yytext) - 1] == '_') {
-                    printf("Lexical Error: Identifier '%s' cannot end with underscore at line %d\n", yytext, line);
-                  }
+                    printf("Lexical Error: Identifier '%s' cannot end with underscore at line %d, column %d\n", 
+                           yytext, line, (int)(column - strlen(yytext)));
+                  } 
                   else {
                     int i, has_consecutive = 0;
                     for (i = 0; i < strlen(yytext) - 1; i++) {
@@ -111,16 +180,33 @@ MULTI_COMMENT "{--"(.|\n)*"--}"
                     }
                     
                     if (has_consecutive) {
-                      printf("Lexical Error: Identifier '%s' has consecutive underscores at line %d\n", yytext, line);
+                      printf("Lexical Error: Identifier '%s' has consecutive underscores at line %d, column %d\n", 
+                             yytext, line,(int)(column - strlen(yytext)));
                     } else {
+                      yylval.str_val = strdup(yytext);
                       return IDENTIFIER;
                     }
                   }
                 }
 
-{SINGLE_COMMENT} { count_position(); }
-{MULTI_COMMENT}  { count_position(); }
+{SINGLE_COMMENT} { 
+                   count_position(); 
+                 }
 
-.               { printf("Lexical Error: Unrecognized character '%s' at line %d\n", yytext, line); }
+{MULTI_COMMENT}  { 
+                   for(int i = 0; i < yyleng; i++) {
+                       if(yytext[i] == '\n') {
+                           line++;
+                           column = 1;
+                       } else {
+                           column++;
+                       }
+                   }
+                 }
+
+.               { 
+                  printf("Lexical Error: Unrecognized character '%s' at line %d, column %d\n", 
+                         yytext, line, column);
+                }
 
 %%
