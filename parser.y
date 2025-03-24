@@ -10,15 +10,6 @@ extern int column;
 extern char* yytext;
 
 void yyerror(const char* msg);
-
-char* copyString(char* str) {
-    char* new_str = strdup(str);
-    if (!new_str) {
-        fprintf(stderr, "Memory allocation error\n");
-        exit(1);
-    }
-    return new_str;
-}
 %}
 
 %union {
@@ -27,7 +18,7 @@ char* copyString(char* str) {
     char* str_val;
 }
 
-/* Token declarations */
+/* declarations des tokens */
 %token MAIN_PRGM VAR BEGIN_PG END_PG 
 %token LET DEFINE CONST
 %token IF THEN ELSE DO WHILE FOR FROM TO STEP
@@ -43,7 +34,7 @@ char* copyString(char* str) {
 %token <int_val> INTEGER
 %token <float_val> FLOAT_VAL
 
-/* Precedence and associativity rules */
+/* la priorite des operateurs le dernier est le plus prioritaire */
 %left OR
 %left AND
 %left NOT
@@ -52,7 +43,7 @@ char* copyString(char* str) {
 %left MULTIPLY DIVIDE
 %left LPAREN RPAREN
 
-/* Starting symbol */
+/* start */
 %start program
 
 %%
@@ -63,7 +54,7 @@ program:
     ;
 
 declarations:
-    /* Empty */
+    /* vide */
     | declarations variable_declaration
     | declarations constant_declaration
     ;
@@ -88,7 +79,7 @@ type:
     ;
 
 instructions:
-    /* Empty */
+    /* vide */
     | instructions instruction
     ;
 

@@ -23,7 +23,7 @@ void count_position() {
 %option noyywrap
 
 DIGIT [0-9]
-LETTER [a-z]
+LETTER [a-zA-Z]
 WHITESPACE [ \t]
 IDENTIFIER {LETTER}({LETTER}|{DIGIT}|_)*
 INTEGER {DIGIT}+
