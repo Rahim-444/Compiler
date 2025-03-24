@@ -6,6 +6,9 @@
 #include <string.h>
 
 
+#define MAX_SYMBOLS 100
+
+
 #define VARIABLE 1
 #define CONSTANT 2
 #define ARRAY 3
@@ -16,28 +19,24 @@
 
 
 typedef struct {
-    char name[15];       
+    char name[15];      
     int code;           
-    int type;           
-    int size;          
+    int type;            
+    int size;           
     int line;            
-    int column;          
+    int column;         
     union {
         int int_val;
         float float_val;
     } value;             
-    int isInitialized;   
+    int isInitialized;  
 } SymbolEntry;
 
 
-#define MAX_SYMBOLS 100
 typedef struct {
     SymbolEntry entries[MAX_SYMBOLS];
     int count;
 } SymbolTable;
-
-
-extern SymbolTable symtab;
 
 
 void initSymbolTable();
@@ -45,6 +44,8 @@ int lookupSymbol(char* name);
 int insertSymbol(char* name, int code, int type, int size, int line, int column);
 void updateSymbolValue(int index, void* value);
 void displaySymbolTable();
+
+
 char* getTypeString(int type);
 char* getEntityCodeString(int code);
 int isConstant(int index);
@@ -55,5 +56,9 @@ int compatible_types(int type1, int type2);
 
 
 void semanticError(char* message, int line, int column);
+
+
+void checkArrayAccess(char* name, int idx, int exprType, int isConstExpr, int exprValue, int line, int column);
+void checkArrayAssignment(char* name, int idx, int exprType, int assignType, int line, int column);
 
 #endif 
