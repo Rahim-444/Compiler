@@ -44,7 +44,7 @@ void initSymbolTable(void);
 SymbolEntry* lookupSymbol(char* name);
 SymbolEntry* insertSymbol(char* name, int code, int type, int size, int line, int column);
 void updateSymbolValue(SymbolEntry* entry, void* value);
-void updateSymbolType(int type);
+void updateSymbolOptions(int type, int arraySize);
 void displaySymbolTable(void);
 
 char* getTypeString(int type);
