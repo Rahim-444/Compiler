@@ -1,0 +1,108 @@
+MainPrgm test_all_errors;
+Var
+    <!- Erreurs lexicales ->
+    let very_long_identifier_name_error: Int;  <!- Identificateur trop long (>14 caractères) ->
+    let invalid_name_: Int;                    <!- Identificateur se terminant par un tiret bas ->
+    let invalid__name: Int;                    <!- Identificateurs avec tirets bas consécutifs ->
+    @define Const TOO_BIG: Int = 40000;        <!- Entier hors plage (>32767) ->
+    @define Const TOO_SMALL: Int = (-40000);   <!- Entier hors plage (<-32768) ->
+    let $invalid: Int;                         <!- Caractère spécial non autorisé ->
+
+    <!- Déclarations valides pour tester d'autres erreurs ->
+    let x, y: Int;
+    let a, b: Float;
+    let arr: [Int; 5];
+    @define Const PI: Float = 3.14;
+    @define Const MAX: Int = 100;
+    
+    <!- Erreur de double déclaration ->
+    let x: Float;                              <!- Redéclaration de x déjà déclaré ->
+
+BeginPg
+{
+    <!- Erreurs syntaxiques ->
+    x := 10                                    <!- Point-virgule manquant ->
+    
+    if x > 5 {                                 <!- Parenthèses manquantes et mot-clé 'then' manquant ->
+        y := 20;
+    }
+    
+    x := ++ 5;                                 <!- Utilisation incorrecte des opérateurs ->
+    
+    x := (10 + 5;                              <!- Parenthèses mal équilibrées ->
+
+    <!- Erreurs sémantiques - Variables non déclarées ->
+    undeclared_var := 5;                       <!- Utilisation d'une variable non déclarée ->
+    
+    <!- Erreurs sémantiques - Types ->
+    x := "chaîne de caractères";               <!- Incompatibilité de type (string à int) ->
+    
+    <!- Erreurs sémantiques - Constantes ->
+    PI := 3.14159;                             <!- Tentative de modification d'une constante ->
+    
+    <!- Erreurs sémantiques - Tableaux ->
+    y := arr;                                  <!- Utilisation d'un tableau sans indice ->
+    z := x[0];                                 <!- Variable simple utilisée comme tableau ->
+    arr[a] := 10;                              <!- Indice non entier pour un tableau ->
+    arr[10] := 5;                              <!- Indice de tableau hors limites ->
+    
+    <!- Erreurs sémantiques - Division par zéro ->
+    x := 100 / 0;                              <!- Division par zéro explicite ->
+    y := 10;
+    x := 100 / (y - y);                        <!- Division par zéro via expression ->
+    x := 50 / (7 - 7);                         <!- Autre forme de division par zéro ->
+    
+    <!- Erreurs sémantiques - Structures de contrôle ->
+    if (a) then {                              <!- Condition non booléenne dans if ->
+        x := 10;
+    }
+    
+    <!- Erreurs sémantiques - Boucles ->
+    for i from 1 to 10 step 0 {                <!- Pas (step) égal à zéro ->
+        x := i;
+    }
+    
+    for PI from 1 to 10 step 1 {               <!- Utilisation d'une constante comme variable de boucle ->
+        x := 5;
+    }
+    
+    for arr from 1 to 10 step 1 {              <!- Utilisation d'un tableau comme variable de boucle ->
+        x := 5;
+    }
+    
+    for k from 1 to 10 step 1 {                <!- Variable de boucle non déclarée ->
+        x := k;
+    }
+    
+    for i from 1.5 to 10 step 1 {              <!- Expression 'from' non entière ->
+        x := i;
+    }
+    
+    for i from 1 to 10.5 step 1 {              <!- Expression 'to' non entière ->
+        x := i;
+    }
+    
+    for i from 1 to 10 step 1.5 {              <!- Expression 'step' non entière ->
+        x := i;
+    }
+    
+    <!- Erreurs sémantiques - Entrée/Sortie ->
+    input(PI);                                 <!- Input avec une constante ->
+    input(arr);                                <!- Input avec un tableau sans indice ->
+    input(arr[10]);                            <!- Input avec un indice de tableau hors limites ->
+    output("Valeur de z: ", z);                <!- Output avec un identificateur non déclaré ->
+    
+    <!- Erreurs multiples dans une expression complexe ->
+    x := (undeclared_var + PI[0]) / (MAX - MAX);  <!- Variable non déclarée, constante utilisée comme tableau, division par zéro ->
+    
+    <!- Erreur de logique conditionnelle ->
+    if (x > 10 AND y) then {                   <!- Opérande droit de AND n'est pas une condition ->
+        x := 5;
+    }
+    
+    <!- Boucle do-while avec condition non booléenne ->
+    do {
+        x := x - 1;
+    } while (a);                               <!- Condition non booléenne dans while ->
+}
+EndPg;
