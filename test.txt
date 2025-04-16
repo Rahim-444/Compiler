@@ -4,127 +4,12 @@ Var
 < !- Testing variable declarations - !>
 let x, y, z: Int;
 let a, b: Float;
+let i: Float;
 let array1: [Int; 5];
 let floatArray: [Float; 3];
 
-< !- Test duplicate declarations (should generate errors) - !>
-let x: Int;  < !- Error: x already declared - !>
-let array1: Float;  < !- Error: array1 already declared - !>
-
-< !- Test constant declarations - !>
-@define Const MAX: Int = 100;
-@define Const PI: Float = 3.14;
-@define Const NEG_NUM: Int = (-25);
-
-< !- Test type compatibility in constant initialization - !>
-@define Const FLOAT_AS_INT: Int = 3.14;  < !- Warning: type mismatch - !>
-@define Const INT_AS_FLOAT: Float = 42;  < !- OK: int can be float - !>
-
 BeginPg
 {
-  < !- Test basic assignments - !>
-  x := 10;
-  y := 20;
-  z := x + y;
-  a := 10.5;
-  b := a * 2.0;
-  
-  < !- Test variable usage before declaration - !>
-  undeclared := 50;  < !- Error: undeclared not declared - !>
-  
-  < !- Test array operations - !>
-  array1[0] := 1;
-  array1[4] := 5;
-  
-  < !- Test array bounds checking - !>
-  array1[5] := 6;  < !- Error: out of bounds (size is 5) - !>
-  array1[(-1)] := 0;  < !- Error: negative index - !>
-  
-  < !- Test array assignment without index - !>
-  array1 := 10;  < !- Error: cannot assign to array without index - !>
-  
-  < !- Test non-array indexing - !>
-  x[0] := 5;  < !- Error: x is not an array - !>
-  
-  < !- Test type compatibility in assignments - !>
-  x := a;  < !- Error: cannot assign float to int - !>
-  a := x;  < !- OK: int can be promoted to float - !>
-  
-  < !- Test constant modification - !>
-  MAX := 200;  < !- Error: cannot modify a constant - !>
-  
-  < !- Test division by zero - !>
-  z := x / 0;  < !- Error: division by zero - !>
-  z := x / (y - y);  < !- Error: division by zero (if detected at compile time) - !>
-  
-  < !- Test input/output - !>
-  input(x);
-  input(MAX);  < !- Error: cannot input to a constant - !>
-  input(array1);  < !- Error: cannot input to array without index - !>
-  
-  output("Value of x is: ", x);
-  output("Sum of arrays: ", array1[0] + array1[1]);
-  
-  < !- Test type compatibility in expressions - !>
-  z := x + a;  < !- Error: mixed types in expression - !>
-  z := x + y;  < !- OK: same type - !>
-  a := a + x;  < !- OK: int can be promoted to float - !>
-  
-  < !- Test array index type - !>
-  array1[a] := 10;  < !- Error: array index must be int - !>
-  
-  < !- Test logical operators - !>
-  if (x > 0 AND y < 10) then {
-    z := 1;
-  }
-  
-  if (!(x == 0) OR (y >= 5)) then {
-    z := 2;
-  }
-  
-  < !- Test for loop constraints - !>
-  for i from 1 to 5 step 1 {
-    array1[i-1] := i * 2;
-  }
-  
-  < !- Test for loop errors - !>
-  for i from 1.5 to 5 step 1 {  < !- Error: from value must be int - !>
-    z := z + 1;
-  }
-  
-  for i from 1 to 5.5 step 1 {  < !- Error: to value must be int - !>
-    z := z + 1;
-  }
-  
-  for i from 1 to 5 step 0 {  < !- Error: step cannot be zero - !>
-    z := z + 1;
-  }
-  
-  for MAX from 1 to 5 step 1 {  < !- Error: loop variable cannot be a constant - !>
-    z := z + 1;
-  }
-  
-  for array1 from 1 to 5 step 1 {  < !- Error: loop variable cannot be an array - !>
-    z := z + 1;
-  }
-  
-  < !- Test complex expressions with type checking - !>
-  z := x + y * (z - 2) / 3;
-  a := a + b * (x / y) + 3.14;
-  
-  < !- Test if-else statements - !>
-  if (x > y) then {
-    z := x - y;
-  } else {
-    z := y - x;
-  }
-  
-  < !- Test nested control structures - !>
-  do {
-    x := x - 1;
-    if (x == 5) then {
-      y := 10;
-    }
-  } while (x > 0);
+  a := 5;
 }
 EndPg;

@@ -105,6 +105,8 @@ variable_declaration:
     {
         currentType = $4;
         arraySize = 0;
+        updateSymbolType(currentType);
+        printf("Variable declaration ya pipit : type %d\n", currentType);
     }
     | LET id_list COLON LBRACKET type SEMICOLON INTEGER RBRACKET SEMICOLON
     {
@@ -116,6 +118,7 @@ variable_declaration:
         }
     }
     ;
+
 
 constant_declaration:
     DEFINE CONST IDENTIFIER COLON type EQUAL expression SEMICOLON
@@ -168,7 +171,7 @@ id_list:
             sprintf(errorMsg, "Redeclaration of identifier '%s'", $1);
             semanticError(errorMsg, line, column);
         } else {
-            insertSymbol($1, (arraySize > 0) ? ARRAY : VARIABLE, currentType, arraySize, line, column);
+            insertSymbol($1, (arraySize > 0) ? ARRAY : VARIABLE, 0, arraySize, line, column);
         }
     }
     | id_list COMMA IDENTIFIER
@@ -178,7 +181,7 @@ id_list:
             sprintf(errorMsg, "Redeclaration of identifier '%s'", $3);
             semanticError(errorMsg, line, column);
         } else {
-            insertSymbol($3, (arraySize > 0) ? ARRAY : VARIABLE, currentType, arraySize, line, column);
+            insertSymbol($3, (arraySize > 0) ? ARRAY : VARIABLE, 0, arraySize, line, column);
         }
     }
     ;

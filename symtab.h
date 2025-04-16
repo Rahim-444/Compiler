@@ -43,6 +43,7 @@ void initSymbolTable();
 int lookupSymbol(char* name);
 int insertSymbol(char* name, int code, int type, int size, int line, int column);
 void updateSymbolValue(int index, void* value);
+void updateSymbolType(int type);
 void displaySymbolTable();
 
 
