@@ -1,16 +1,16 @@
 #include "symtab.h"
 
-/* Global symbol table */
+
 SymbolTable symtab;
 
-/* Initialize symbol table */
+
 void initSymbolTable(void) {
   symtab.head = NULL;
   symtab.count = 0;
 }
 
-/* Look up a symbol by name, return pointer to SymbolEntry or NULL if not found
- */
+
+ 
 SymbolEntry *lookupSymbol(char *name) {
   SymbolNode *current = symtab.head;
   while (current != NULL) {
@@ -22,7 +22,7 @@ SymbolEntry *lookupSymbol(char *name) {
   return NULL;
 }
 
-/* Insert a new symbol into the table */
+
 SymbolEntry *insertSymbol(char *name, int code, int type, int size, int line,
                           int column) {
   SymbolNode *newNode = (SymbolNode *)malloc(sizeof(SymbolNode));
@@ -41,7 +41,7 @@ SymbolEntry *insertSymbol(char *name, int code, int type, int size, int line,
   entry->column = column;
   entry->isInitialized = 0;
 
-  /* Insert at the beginning (O(1) operation) */
+
   newNode->next = symtab.head;
   symtab.head = newNode;
   symtab.count++;
@@ -49,7 +49,7 @@ SymbolEntry *insertSymbol(char *name, int code, int type, int size, int line,
   return entry;
 }
 
-/* Update a symbol's value */
+
 void updateSymbolValue(SymbolEntry *entry, void *value) {
   if (entry == NULL)
     return;
@@ -61,7 +61,7 @@ void updateSymbolValue(SymbolEntry *entry, void *value) {
   }
 }
 
-/* Update a symbol's type for all entries with type 0 */
+
 void updateSymbolOptions(int type, int arraySize) {
   if (type != TYPE_INT && type != TYPE_FLOAT) {
     printf("Invalid type for symbol table update\n");
@@ -82,7 +82,7 @@ void updateSymbolOptions(int type, int arraySize) {
   }
 }
 
-/* Display the symbol table */
+
 void displaySymbolTable(void) {
   printf("\n===== Symbol Table =====\n");
   printf("%-15s %-10s %-8s %-10s %-15s %-8s %-8s\n", "Name", "Entity", "Type",
@@ -118,7 +118,7 @@ void displaySymbolTable(void) {
   printf("===== End of Symbol Table =====\n\n");
 }
 
-/* Get string representation of type */
+
 char *getTypeString(int type) {
   switch (type) {
   case TYPE_INT:
