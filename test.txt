@@ -1,17 +1,80 @@
-MainPrgm SemanticTest;
-
-Var
-< !- Testing variable declarations - !>
-let x, y, z: Int;
-let a, b: Float;
-let i: Float;
-let array1: [Int; 5];
-let floatArray: [Float; 3];
-@define Const Software : Int = 91 ;
+MainPrgm L3_software ;
+Var 
+< !- Declaration of variables and constants - !> 
+let x, y, z, i : Int ;
+let a, b : Float ;
+let matrix : [Int; 20] ;
+let array1 : [Float; 10] ;
+let array2 : [Float; 10] ;
+@define Const MAX_SIZE : Int = 100 ;
+@define Const PI : Float = 3.14159 ;
 
 BeginPg
 {
-  a := 5;
-  Software := 10; 
+    {-- This is a comprehensive program 
+       testing all valid MiniSoft features --}
+    
+    < !- Variable assignments - !>
+    x := 10 ;
+    y := 20 ;
+    z := x + y ;
+    a := 15.5 ;
+    b := a * 2.0 ;
+    
+    < !- Array assignments - !>
+    array1[0] := 5 ;
+    array1[1] := 10 ;
+    matrix[5] := 3.14 ;
+    
+    < !- Conditional statement - !>
+    if (x > y) then {
+        z := x ;
+    } else {
+        z := y ;
+    }
+    
+    < !- Do while - !>
+    x := 0 ;
+    do {
+        x := x + 1 ;
+        array1[x] := x * 2 ;
+    } while (x < 5) ;
+    
+    < !- For loop - !>
+    for i from 0 to 9 step 1 {
+        array1[i] := i * i ;
+    }
+    
+    < !- Complex expressions - !>
+    z := (x + y) * 2 / (MAX_SIZE - 90) ;
+    
+    < !- Logical operations - !>
+    if ((x > 5) AND (y < 30)) then {
+        output("Both conditions are true") ;
+    }
+    
+    if ((x > 50) OR (y > 10)) then {
+        output("At least one condition is true") ;
+    }
+    
+    if (!(x == y)) then {
+        output("x is not equal to y") ;
+    }
+    
+    < !- Input/Output operations - !>
+    output("Enter a value:") ;
+    input(x) ;
+    output("You entered:", x) ;
+    
+    < !- Nested conditions - !>
+    if (x > 0) then {
+        if (x > 10) then {
+            output("x is greater than 10") ;
+        } else {
+            output("x is between 1 and 10") ;
+        }
+    } else {
+        output("x is negative or zero") ;
+    }
 }
-EndPg;
+EndPg ;

@@ -190,7 +190,7 @@ MULTI_COMMENT "{--"(.|\n)*"--}"
                 }
 
 {SINGLE_COMMENT} { 
-                   count_position(); 
+                   count_position();
                  }
 
 {MULTI_COMMENT}  { 

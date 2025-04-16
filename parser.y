@@ -12,14 +12,11 @@ extern char* yytext;
 
 void yyerror(const char* msg);
 
-
 char errorMsg[256];
-
 
 int currentType = 0;
 int arraySize = 0;
 
-//
 typedef struct {
     int type;      
     int isConstant; 
@@ -67,7 +64,7 @@ ExprType exprResult;
 %type <expr> expression arithmetic_expression logical_expression comparison_expression
 %type <expr> condition
 
-/* Operator precedence - last has highest priority */
+/* Operator precedence */
 %left OR
 %left AND
 %left NOT
@@ -84,7 +81,6 @@ ExprType exprResult;
 program: 
     MAIN_PRGM IDENTIFIER SEMICOLON 
     {
-        
         initSymbolTable();
     }
     VAR declarations BEGIN_PG LBRACE instructions RBRACE END_PG SEMICOLON
@@ -119,43 +115,27 @@ variable_declaration:
     }
     ;
 
-
 constant_declaration:
     DEFINE CONST IDENTIFIER COLON type EQUAL expression SEMICOLON
     {
-        int idx = lookupSymbol($3);
-        if (idx >= 0) {
+        SymbolEntry* entry = lookupSymbol($3);
+        if (entry != NULL) {
             sprintf(errorMsg, "Redeclaration of identifier '%s'", $3);
             semanticError(errorMsg, line, column);
         } else {
-
             if (!compatible_types($5, $7.type)) {
                 sprintf(errorMsg, "Type mismatch in constant declaration: expected %s, got %s", 
                         getTypeString($5), getTypeString($7.type));
                 semanticError(errorMsg, line, column);
             } else {
-            
-                idx = insertSymbol($3, CONSTANT, $5, 0, line, column);
-                
+                entry = insertSymbol($3, CONSTANT, $5, 0, line, column);
                 if ($7.isConstant) {
                     if ($5 == TYPE_INT) {
-                        int intValue;
-                        if ($7.type == TYPE_INT) {
-                            intValue = $7.value.int_val;
-                        } else {
-                            
-                            intValue = (int)$7.value.float_val;
-                        }
-                        updateSymbolValue(idx, &intValue);
+                        int intValue = ($7.type == TYPE_INT) ? $7.value.int_val : (int)$7.value.float_val;
+                        updateSymbolValue(entry, &intValue);
                     } else {
-                        float floatValue;
-                        if ($7.type == TYPE_FLOAT) {
-                            floatValue = $7.value.float_val;
-                        } else {
-                            
-                            floatValue = (float)$7.value.int_val;
-                        }
-                        updateSymbolValue(idx, &floatValue);
+                        float floatValue = ($7.type == TYPE_FLOAT) ? $7.value.float_val : (float)$7.value.int_val;
+                        updateSymbolValue(entry, &floatValue);
                     }
                 }
             }
@@ -166,8 +146,8 @@ constant_declaration:
 id_list:
     IDENTIFIER
     {
-        int idx = lookupSymbol($1);
-        if (idx >= 0) {
+        SymbolEntry* entry = lookupSymbol($1);
+        if (entry != NULL) {
             sprintf(errorMsg, "Redeclaration of identifier '%s'", $1);
             semanticError(errorMsg, line, column);
         } else {
@@ -176,8 +156,8 @@ id_list:
     }
     | id_list COMMA IDENTIFIER
     {
-        int idx = lookupSymbol($3);
-        if (idx >= 0) {
+        SymbolEntry* entry = lookupSymbol($3);
+        if (entry != NULL) {
             sprintf(errorMsg, "Redeclaration of identifier '%s'", $3);
             semanticError(errorMsg, line, column);
         } else {
@@ -207,82 +187,62 @@ instruction:
 assignment:
     IDENTIFIER ASSIGN expression
     {
-        int idx = lookupSymbol($1);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($1);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $1);
             semanticError(errorMsg, line, column);
         } else {
-         
-            if (isConstant(idx)) {
+            if (isConstant(entry)) {
                 sprintf(errorMsg, "Cannot modify constant '%s'", $1);
                 semanticError(errorMsg, line, column);
             }
-          
-            else if (isArray(idx)) {
+            else if (isArray(entry)) {
                 sprintf(errorMsg, "Cannot assign to array '%s' without index", $1);
                 semanticError(errorMsg, line, column);
             }
-           
-            else if (!compatible_types(getSymbolType(idx), $3.type)) {
+            else if (!compatible_types(getSymbolType(entry), $3.type)) {
                 sprintf(errorMsg, "Type mismatch in assignment: variable '%s' is %s, expression is %s", 
                         $1, 
-                        getTypeString(getSymbolType(idx)), 
+                        getTypeString(getSymbolType(entry)), 
                         getTypeString($3.type));
                 semanticError(errorMsg, line, column);
             }
-            
-         
             if ($3.isConstant) {
-                if (getSymbolType(idx) == TYPE_INT) {
-                    int intValue;
-                    if ($3.type == TYPE_INT) {
-                        intValue = $3.value.int_val;
-                    } else {
-                        intValue = (int)$3.value.float_val;
-                    }
-                    updateSymbolValue(idx, &intValue);
+                if (getSymbolType(entry) == TYPE_INT) {
+                    int intValue = ($3.type == TYPE_INT) ? $3.value.int_val : (int)$3.value.float_val;
+                    updateSymbolValue(entry, &intValue);
                 } else { 
-                    float floatValue;
-                    if ($3.type == TYPE_FLOAT) {
-                        floatValue = $3.value.float_val;
-                    } else {
-                        floatValue = (float)$3.value.int_val;
-                    }
-                    updateSymbolValue(idx, &floatValue);
+                    float floatValue = ($3.type == TYPE_FLOAT) ? $3.value.float_val : (float)$3.value.int_val;
+                    updateSymbolValue(entry, &floatValue);
                 }
             }
         }
     }
     | IDENTIFIER LBRACKET expression RBRACKET ASSIGN expression
     {
-        int idx = lookupSymbol($1);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($1);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $1);
             semanticError(errorMsg, line, column);
         } else {
-            
-            if (!isArray(idx)) {
+            if (!isArray(entry)) {
                 sprintf(errorMsg, "Cannot use array indexing on non-array variable '%s'", $1);
                 semanticError(errorMsg, line, column);
             }
-  
             else if ($3.type != TYPE_INT) {
                 semanticError("Array index must be of integer type", line, column);
             }
-            
             else if ($3.isConstant) {
-                if ($3.value.int_val < 0 || $3.value.int_val >= getArraySize(idx)) {
+                if ($3.value.int_val < 0 || $3.value.int_val >= getArraySize(entry)) {
                     sprintf(errorMsg, "Array index %d out of bounds [0-%d] for array '%s'", 
-                            $3.value.int_val, getArraySize(idx)-1, $1);
+                            $3.value.int_val, getArraySize(entry)-1, $1);
                     semanticError(errorMsg, line, column);
                 }
             }
-            
-
-            if (!compatible_types(getSymbolType(idx), $6.type)) {
+            if (!compatible_types(getSymbolType(entry), $6.type)) {
                 sprintf(errorMsg, "Type mismatch in array assignment: array '%s' is %s, expression is %s", 
                         $1, 
-                        getTypeString(getSymbolType(idx)), 
+                        getTypeString(getSymbolType(entry)), 
                         getTypeString($6.type));
                 semanticError(errorMsg, line, column);
             }
@@ -293,14 +253,12 @@ assignment:
 if_statement:
     IF LPAREN condition RPAREN THEN LBRACE instructions RBRACE ELSE LBRACE instructions RBRACE
     {
-        
         if ($3.type != TYPE_INT) {
             semanticError("Condition in if statement must evaluate to a boolean", line, column);
         }
     }
     | IF LPAREN condition RPAREN THEN LBRACE instructions RBRACE
     {
-        
         if ($3.type != TYPE_INT) {
             semanticError("Condition in if statement must evaluate to a boolean", line, column);
         }
@@ -310,7 +268,6 @@ if_statement:
 while_loop:
     DO LBRACE instructions RBRACE WHILE LPAREN condition RPAREN SEMICOLON
     {
-
         if ($7.type != TYPE_INT) {
             semanticError("Condition in while loop must evaluate to a boolean", line, column);
         }
@@ -320,20 +277,17 @@ while_loop:
 for_loop:
     FOR IDENTIFIER FROM expression TO expression STEP expression LBRACE instructions RBRACE
     {
-     
-        int idx = lookupSymbol($2);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($2);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared loop variable '%s'", $2);
             semanticError(errorMsg, line, column);
-        } else if (isConstant(idx)) {
+        } else if (isConstant(entry)) {
             sprintf(errorMsg, "Cannot use constant as loop variable '%s'", $2);
             semanticError(errorMsg, line, column);
-        } else if (isArray(idx)) {
+        } else if (isArray(entry)) {
             sprintf(errorMsg, "Cannot use array as loop variable '%s'", $2);
             semanticError(errorMsg, line, column);
         }
-        
-
         if ($4.type != TYPE_INT) {
             semanticError("'from' expression in for loop must be of type Int", line, column);
         }
@@ -343,8 +297,6 @@ for_loop:
         if ($8.type != TYPE_INT) {
             semanticError("'step' expression in for loop must be of type Int", line, column);
         }
-        
-
         if ($8.isConstant && $8.value.int_val == 0) {
             semanticError("Step value in for loop cannot be zero", line, column);
         }
@@ -354,33 +306,33 @@ for_loop:
 io_statement:
     INPUT LPAREN IDENTIFIER RPAREN
     {
-        int idx = lookupSymbol($3);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($3);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $3);
             semanticError(errorMsg, line, column);
-        } else if (isConstant(idx)) {
+        } else if (isConstant(entry)) {
             sprintf(errorMsg, "Cannot input to constant '%s'", $3);
             semanticError(errorMsg, line, column);
-        } else if (isArray(idx)) {
+        } else if (isArray(entry)) {
             sprintf(errorMsg, "Cannot input to array '%s' without specifying an index", $3);
             semanticError(errorMsg, line, column);
         }
     }
     | INPUT LPAREN IDENTIFIER LBRACKET expression RBRACKET RPAREN
     {
-        int idx = lookupSymbol($3);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($3);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $3);
             semanticError(errorMsg, line, column);
-        } else if (!isArray(idx)) {
+        } else if (!isArray(entry)) {
             sprintf(errorMsg, "Cannot use array indexing on non-array variable '%s'", $3);
             semanticError(errorMsg, line, column);
         } else if ($5.type != TYPE_INT) {
             semanticError("Array index must be of integer type", line, column);
         } else if ($5.isConstant) {
-            if ($5.value.int_val < 0 || $5.value.int_val >= getArraySize(idx)) {
+            if ($5.value.int_val < 0 || $5.value.int_val >= getArraySize(entry)) {
                 sprintf(errorMsg, "Array index %d out of bounds [0-%d] for array '%s'", 
-                        $5.value.int_val, getArraySize(idx)-1, $3);
+                        $5.value.int_val, getArraySize(entry)-1, $3);
                 semanticError(errorMsg, line, column);
             }
         }
@@ -415,49 +367,49 @@ arithmetic_expression:
     }
     | IDENTIFIER 
     { 
-        int idx = lookupSymbol($1);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($1);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $1);
             semanticError(errorMsg, line, column);
             $$.type = TYPE_INT;
             $$.isConstant = 0;
-        } else if (isArray(idx)) {
+        } else if (isArray(entry)) {
             sprintf(errorMsg, "Cannot use array '%s' without index", $1);
             semanticError(errorMsg, line, column);
-            $$.type = getSymbolType(idx);
+            $$.type = getSymbolType(entry);
             $$.isConstant = 0;
         } else {
-            $$.type = getSymbolType(idx);
-            $$.isConstant = isConstant(idx);
+            $$.type = getSymbolType(entry);
+            $$.isConstant = isConstant(entry);
         }
     }
     | IDENTIFIER LBRACKET expression RBRACKET 
     { 
-        int idx = lookupSymbol($1);
-        if (idx < 0) {
+        SymbolEntry* entry = lookupSymbol($1);
+        if (entry == NULL) {
             sprintf(errorMsg, "Undeclared identifier '%s'", $1);
             semanticError(errorMsg, line, column);
             $$.type = TYPE_INT;
             $$.isConstant = 0;
-        } else if (!isArray(idx)) {
+        } else if (!isArray(entry)) {
             sprintf(errorMsg, "Cannot use array indexing on non-array variable '%s'", $1);
             semanticError(errorMsg, line, column);
-            $$.type = getSymbolType(idx);
+            $$.type = getSymbolType(entry);
             $$.isConstant = 0;
         } else if ($3.type != TYPE_INT) {
             semanticError("Array index must be of integer type", line, column);
-            $$.type = getSymbolType(idx);
+            $$.type = getSymbolType(entry);
             $$.isConstant = 0;
         } else if ($3.isConstant) {
-            if ($3.value.int_val < 0 || $3.value.int_val >= getArraySize(idx)) {
+            if ($3.value.int_val < 0 || $3.value.int_val >= getArraySize(entry)) {
                 sprintf(errorMsg, "Array index %d out of bounds [0-%d] for array '%s'", 
-                        $3.value.int_val, getArraySize(idx)-1, $1);
+                        $3.value.int_val, getArraySize(entry)-1, $1);
                 semanticError(errorMsg, line, column);
             }
-            $$.type = getSymbolType(idx);
+            $$.type = getSymbolType(entry);
             $$.isConstant = 0;
         } else {
-            $$.type = getSymbolType(idx);
+            $$.type = getSymbolType(entry);
             $$.isConstant = 0;
         }
     }
@@ -465,7 +417,6 @@ arithmetic_expression:
     { 
         $$.type = ($1.type == TYPE_FLOAT || $3.type == TYPE_FLOAT) ? TYPE_FLOAT : TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($$.type == TYPE_INT) {
                 $$.value.int_val = $1.value.int_val + $3.value.int_val;
@@ -480,7 +431,6 @@ arithmetic_expression:
     { 
         $$.type = ($1.type == TYPE_FLOAT || $3.type == TYPE_FLOAT) ? TYPE_FLOAT : TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($$.type == TYPE_INT) {
                 $$.value.int_val = $1.value.int_val - $3.value.int_val;
@@ -495,7 +445,6 @@ arithmetic_expression:
     { 
         $$.type = ($1.type == TYPE_FLOAT || $3.type == TYPE_FLOAT) ? TYPE_FLOAT : TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($$.type == TYPE_INT) {
                 $$.value.int_val = $1.value.int_val * $3.value.int_val;
@@ -510,16 +459,8 @@ arithmetic_expression:
     { 
         $$.type = ($1.type == TYPE_FLOAT || $3.type == TYPE_FLOAT) ? TYPE_FLOAT : TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
-       
         if ($3.isConstant) {
-            int isZero = 0;
-            if ($3.type == TYPE_INT) {
-                isZero = ($3.value.int_val == 0);
-            } else {
-                isZero = ($3.value.float_val == 0.0);
-            }
-            
+            int isZero = ($3.type == TYPE_INT) ? ($3.value.int_val == 0) : ($3.value.float_val == 0.0);
             if (isZero) {
                 semanticError("Division by zero", line, column);
             } else if ($$.isConstant) {
@@ -540,30 +481,14 @@ arithmetic_expression:
     ;
 
 logical_expression:
-    comparison_expression 
-    { 
-        $$ = $1;
-    }
+    comparison_expression { $$ = $1; }
     | logical_expression AND logical_expression 
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
-            int val1, val2;
-            
-            if ($1.type == TYPE_INT) {
-                val1 = $1.value.int_val != 0;
-            } else {
-                val1 = $1.value.float_val != 0.0;
-            }
-            
-            if ($3.type == TYPE_INT) {
-                val2 = $3.value.int_val != 0;
-            } else {
-                val2 = $3.value.float_val != 0.0;
-            }
-            
+            int val1 = ($1.type == TYPE_INT) ? ($1.value.int_val != 0) : ($1.value.float_val != 0.0);
+            int val2 = ($3.type == TYPE_INT) ? ($3.value.int_val != 0) : ($3.value.float_val != 0.0);
             $$.value.int_val = val1 && val2;
         }
     }
@@ -571,22 +496,9 @@ logical_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
-            int val1, val2;
-            
-            if ($1.type == TYPE_INT) {
-                val1 = $1.value.int_val != 0;
-            } else {
-                val1 = $1.value.float_val != 0.0;
-            }
-            
-            if ($3.type == TYPE_INT) {
-                val2 = $3.value.int_val != 0;
-            } else {
-                val2 = $3.value.float_val != 0.0;
-            }
-            
+            int val1 = ($1.type == TYPE_INT) ? ($1.value.int_val != 0) : ($1.value.float_val != 0.0);
+            int val2 = ($3.type == TYPE_INT) ? ($3.value.int_val != 0) : ($3.value.float_val != 0.0);
             $$.value.int_val = val1 || val2;
         }
     }
@@ -594,23 +506,12 @@ logical_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = $2.isConstant;
-        
         if ($$.isConstant) {
-            int val;
-            
-            if ($2.type == TYPE_INT) {
-                val = $2.value.int_val != 0;
-            } else {
-                val = $2.value.float_val != 0.0;
-            }
-            
+            int val = ($2.type == TYPE_INT) ? ($2.value.int_val != 0) : ($2.value.float_val != 0.0);
             $$.value.int_val = !val;
         }
     }
-    | LPAREN logical_expression RPAREN 
-    { 
-        $$ = $2;
-    }
+    | LPAREN logical_expression RPAREN { $$ = $2; }
     ;
 
 comparison_expression:
@@ -618,7 +519,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val > $3.value.int_val);
@@ -633,7 +533,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val < $3.value.int_val);
@@ -648,7 +547,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val >= $3.value.int_val);
@@ -663,7 +561,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val <= $3.value.int_val);
@@ -678,7 +575,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val == $3.value.int_val);
@@ -693,7 +589,6 @@ comparison_expression:
     { 
         $$.type = TYPE_INT;
         $$.isConstant = ($1.isConstant && $3.isConstant);
-        
         if ($$.isConstant) {
             if ($1.type == TYPE_INT && $3.type == TYPE_INT) {
                 $$.value.int_val = ($1.value.int_val != $3.value.int_val);
@@ -707,10 +602,7 @@ comparison_expression:
     ;
 
 condition:
-    logical_expression
-    {
-        $$ = $1;
-    }
+    logical_expression { $$ = $1; }
     ;
 
 %%
