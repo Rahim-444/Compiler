@@ -106,12 +106,12 @@ variable_declaration:
         currentType = $4;
         arraySize = 0;
         updateSymbolType(currentType);
-        printf("Variable declaration ya pipit : type %d\n", currentType);
     }
     | LET id_list COLON LBRACKET type SEMICOLON INTEGER RBRACKET SEMICOLON
     {
         currentType = $5;
         arraySize = $7;
+        updateSymbolType(currentType);
         if (arraySize <= 0) {
             sprintf(errorMsg, "Array size must be positive, got %d", arraySize);
             semanticError(errorMsg, line, column);

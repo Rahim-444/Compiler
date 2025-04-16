@@ -7,9 +7,11 @@ let a, b: Float;
 let i: Float;
 let array1: [Int; 5];
 let floatArray: [Float; 3];
+@define Const Software : Int = 91 ;
 
 BeginPg
 {
   a := 5;
+  Software := 10; 
 }
 EndPg;
