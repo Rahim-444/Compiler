@@ -34,7 +34,6 @@ void count_position() {
     }
 }
 
-// Function to validate integer range
 int validate_int(int value) {
     if (value < -32768 || value > 32767) {
         printf("Lexical Error: Integer %d out of range (-32768 to 32767) at line %d, column %d\n", 
@@ -45,7 +44,6 @@ int validate_int(int value) {
 }
 %}
 
-%option noyywrap
 
 DIGIT [0-9]
 LETTER [a-zA-Z]

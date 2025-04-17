@@ -1,16 +1,12 @@
 #include "symtab.h"
 
-
 SymbolTable symtab;
-
 
 void initSymbolTable(void) {
   symtab.head = NULL;
   symtab.count = 0;
 }
 
-
- 
 SymbolEntry *lookupSymbol(char *name) {
   SymbolNode *current = symtab.head;
   while (current != NULL) {
@@ -21,7 +17,6 @@ SymbolEntry *lookupSymbol(char *name) {
   }
   return NULL;
 }
-
 
 SymbolEntry *insertSymbol(char *name, int code, int type, int size, int line,
                           int column) {
@@ -41,14 +36,12 @@ SymbolEntry *insertSymbol(char *name, int code, int type, int size, int line,
   entry->column = column;
   entry->isInitialized = 0;
 
-
   newNode->next = symtab.head;
   symtab.head = newNode;
   symtab.count++;
 
   return entry;
 }
-
 
 void updateSymbolValue(SymbolEntry *entry, void *value) {
   if (entry == NULL)
@@ -60,7 +53,6 @@ void updateSymbolValue(SymbolEntry *entry, void *value) {
     entry->value.float_val = *((float *)value);
   }
 }
-
 
 void updateSymbolOptions(int type, int arraySize) {
   if (type != TYPE_INT && type != TYPE_FLOAT) {
@@ -81,7 +73,6 @@ void updateSymbolOptions(int type, int arraySize) {
     current = current->next;
   }
 }
-
 
 void displaySymbolTable(void) {
   printf("\n===== Symbol Table =====\n");
@@ -118,7 +109,6 @@ void displaySymbolTable(void) {
   printf("===== End of Symbol Table =====\n\n");
 }
 
-
 char *getTypeString(int type) {
   switch (type) {
   case TYPE_INT:
@@ -130,7 +120,6 @@ char *getTypeString(int type) {
   }
 }
 
-/* Get string representation of entity code */
 char *getEntityCodeString(int code) {
   switch (code) {
   case VARIABLE:
@@ -144,45 +133,38 @@ char *getEntityCodeString(int code) {
   }
 }
 
-/* Check if symbol is a constant */
 int isConstant(SymbolEntry *entry) {
   if (entry == NULL)
     return 0;
   return entry->code == CONSTANT;
 }
 
-/* Check if symbol is an array */
 int isArray(SymbolEntry *entry) {
   if (entry == NULL)
     return 0;
   return entry->code == ARRAY;
 }
 
-/* Get symbol type */
 int getSymbolType(SymbolEntry *entry) {
   if (entry == NULL)
     return -1;
   return entry->type;
 }
 
-/* Get array size */
 int getArraySize(SymbolEntry *entry) {
   if (entry == NULL || !isArray(entry))
     return -1;
   return entry->size;
 }
 
-/* Check if types are compatible for assignment */
 int compatible_types(int type1, int type2) {
   return (type1 == type2) || (type1 == TYPE_FLOAT && type2 == TYPE_INT);
 }
 
-/* General semantic error reporting */
 void semanticError(char *message, int line, int column) {
   printf("Semantic Error: %s at line %d, column %d\n", message, line, column);
 }
 
-/* Improved array access checking */
 void checkArrayAccess(char *name, int idx, int exprType, int isConstExpr,
                       int exprValue, int line, int column) {
   char errorMsg[256];
@@ -216,7 +198,6 @@ void checkArrayAccess(char *name, int idx, int exprType, int isConstExpr,
   }
 }
 
-/* Improved array assignment checking */
 void checkArrayAssignment(char *name, int idx, int exprType, int assignType,
                           int line, int column) {
   char errorMsg[256];
@@ -235,7 +216,6 @@ void checkArrayAssignment(char *name, int idx, int exprType, int assignType,
   }
 }
 
-/* Check if a variable can be used as a loop control variable */
 int isValidLoopVariable(char *name, int line, int column) {
   char errorMsg[256];
   SymbolEntry *entry = lookupSymbol(name);
@@ -261,7 +241,6 @@ int isValidLoopVariable(char *name, int line, int column) {
   return 1;
 }
 
-/* Check if a variable can be used in an IO operation */
 int isValidIOVariable(char *name, int line, int column) {
   char errorMsg[256];
   SymbolEntry *entry = lookupSymbol(name);
@@ -281,7 +260,6 @@ int isValidIOVariable(char *name, int line, int column) {
   return 1;
 }
 
-/* Check if an array element can be used in an IO operation */
 int isValidIOArrayElement(char *name, int exprType, int isConstExpr,
                           int exprValue, int line, int column) {
   char errorMsg[256];
@@ -318,7 +296,6 @@ int isValidIOArrayElement(char *name, int exprType, int isConstExpr,
   return 1;
 }
 
-/* Check assignment compatibility */
 int checkAssignmentCompatibility(char *varName, int varType, int exprType,
                                  int line, int column) {
   char errorMsg[256];
@@ -333,7 +310,6 @@ int checkAssignmentCompatibility(char *varName, int varType, int exprType,
   return 1;
 }
 
-/* Check loop step value */
 void checkLoopStep(int isConstant, int value, int line, int column) {
   if (isConstant && value == 0) {
     semanticError("Step value in for loop cannot be zero", line, column);
@@ -350,7 +326,6 @@ void checkConditionType(int exprType, const char *context, int line,
   }
 }
 
-/* Check division by zero */
 void checkDivisionByZero(int isConstant, int type, void *value, int line,
                          int column) {
   if (!isConstant)

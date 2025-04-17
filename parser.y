@@ -44,7 +44,6 @@ ExprType exprResult;
     } expr;
 }
 
-/* Token declarations */
 %token MAIN_PRGM VAR BEGIN_PG END_PG 
 %token LET DEFINE CONST
 %token IF THEN ELSE DO WHILE FOR FROM TO STEP
@@ -64,7 +63,6 @@ ExprType exprResult;
 %type <expr> expression arithmetic_expression logical_expression comparison_expression
 %type <expr> condition
 
-/* Operator precedence */
 %left OR
 %left AND
 %left NOT
@@ -73,7 +71,6 @@ ExprType exprResult;
 %left MULTIPLY DIVIDE
 %left LPAREN RPAREN
 
-/* Start symbol */
 %start program
 
 %%

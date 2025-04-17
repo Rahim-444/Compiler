@@ -12,7 +12,6 @@
 #define TYPE_INT 1
 #define TYPE_FLOAT 2
 
-/* Structure for a symbol table entry */
 typedef struct {
     char name[15];      
     int code;           
@@ -27,19 +26,16 @@ typedef struct {
     int isInitialized;  
 } SymbolEntry;
 
-/* Node structure for the linked list */
 typedef struct SymbolNode {
     SymbolEntry entry;
     struct SymbolNode* next;
 } SymbolNode;
 
-/* Symbol table structure using a linked list */
 typedef struct {
     SymbolNode* head;
-    int count;  // Optional, kept for convenience
+    int count; 
 } SymbolTable;
 
-/* Function declarations */
 void initSymbolTable(void);
 SymbolEntry* lookupSymbol(char* name);
 SymbolEntry* insertSymbol(char* name, int code, int type, int size, int line, int column);

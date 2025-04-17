@@ -3,7 +3,7 @@ Var
 < !- Declaration of variables and constants - !> 
 let x, y, z, i : Int ;
 let a, b : Float ;
-let matrix : [Int; 20] ;
+let matrix : [Int; 10] ;
 let array1 : [Float; 10] ;
 let array2 : [Float; 10] ;
 @define Const MAX_SIZE : Int = 100 ;
@@ -18,13 +18,14 @@ BeginPg
     x := 10 ;
     y := 20 ;
     z := x + y ;
-    a := 15.5 ;
+    a := 15.5  ;
     b := a * 2.0 ;
+    a := a + b ;
     
     < !- Array assignments - !>
     array1[0] := 5 ;
     array1[1] := 10 ;
-    matrix[5] := 3.14 ;
+    matrix[15] := 3 ;
     
     < !- Conditional statement - !>
     if (x > y) then {

@@ -11,12 +11,8 @@ extern int column;
 
 // Function to reset parser state between parses
 void reset_parser() {
-  // Reset line and column counters
   line = 1;
   column = 1;
-
-  // Optionally reset other state variables
-  // (like symbol table, etc. if you want to keep them separate between parses)
 }
 
 int main(int argc, char *argv[]) {
@@ -35,7 +31,6 @@ int main(int argc, char *argv[]) {
     yyparse();
     fclose(file);
   } else {
-    // Interactive mode
     printf("MiniSoft Interactive Parser\n");
     printf("Enter code (type 'exit;' on a new line to quit):\n");
 
